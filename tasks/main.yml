@@ -1,0 +1,32 @@
+---
+- name: Ensure SSH directory for each user
+  ansible.builtin.file:
+      path: /home/{{ item.name }}/.ssh
+      owner: '{{ item.name }}'
+      group: '{{ item.name }}'
+      state: directory
+  loop:
+      "{{ key_list | selectattr('local_ssh_key', 'defined') |
+      selectattr('ssh_key', '==', True) | list }}"
+
+- name: Copy the SSH private keys to the remote user
+  ansible.builtin.copy:
+      src: '{{ item.local_ssh_key }}'
+      dest: /home/{{ item.name }}/.ssh/{{ item.local_ssh_key | basename }}
+      mode: '0600'
+      owner: '{{ item.name }}'
+      group: '{{ item.name }}'
+  loop:
+      "{{ key_list | selectattr('local_ssh_key', 'defined') |
+      selectattr('ssh_key', '==', True) | list }}"
+
+- name: Copy the SSH public keys to the remote user
+  ansible.builtin.copy:
+      src: '{{ item.local_ssh_key }}.pub'
+      dest: /home/{{ item.name }}/.ssh/{{ item.local_ssh_key | basename }}.pub
+      mode: '0644'
+      owner: '{{ item.name }}'
+      group: '{{ item.name }}'
+  loop:
+      "{{ key_list | selectattr('local_ssh_key', 'defined') |
+      selectattr('ssh_key', '==', True) | list }}"
