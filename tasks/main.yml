@@ -1,32 +1,41 @@
 ---
 - name: Ensure SSH directory for each user
   ansible.builtin.file:
-      path: /home/{{ item.name }}/.ssh
-      owner: '{{ item.name }}'
-      group: '{{ item.name }}'
+      path: /home/{{ ssh_key.name }}/.ssh
+      owner: '{{ ssh_key.name }}'
+      group: '{{ ssh_key.name }}'
       state: directory
   loop:
       "{{ key_list | selectattr('local_ssh_key', 'defined') |
       selectattr('ssh_key', '==', True) | list }}"
+  loop_control:
+    loop_var: ssh_key
+    label: '{{ ssh_key.name }}'
 
 - name: Copy the SSH private keys to the remote user
   ansible.builtin.copy:
-      src: '{{ item.local_ssh_key }}'
-      dest: /home/{{ item.name }}/.ssh/{{ item.local_ssh_key | basename }}
+      src: '{{ ssh_key.local_ssh_key }}'
+      dest: /home/{{ ssh_key.name }}/.ssh/{{ ssh_key.local_ssh_key | basename }}
       mode: '0600'
-      owner: '{{ item.name }}'
-      group: '{{ item.name }}'
+      owner: '{{ ssh_key.name }}'
+      group: '{{ ssh_key.name }}'
   loop:
       "{{ key_list | selectattr('local_ssh_key', 'defined') |
       selectattr('ssh_key', '==', True) | list }}"
+  loop_control:
+    loop_var: ssh_key
+    label: '{{ ssh_key.name }}'
 
 - name: Copy the SSH public keys to the remote user
   ansible.builtin.copy:
-      src: '{{ item.local_ssh_key }}.pub'
-      dest: /home/{{ item.name }}/.ssh/{{ item.local_ssh_key | basename }}.pub
+      src: '{{ ssh_key.local_ssh_key }}.pub'
+      dest: /home/{{ ssh_key.name }}/.ssh/{{ ssh_key.local_ssh_key | basename }}.pub
       mode: '0644'
-      owner: '{{ item.name }}'
-      group: '{{ item.name }}'
+      owner: '{{ ssh_key.name }}'
+      group: '{{ ssh_key.name }}'
   loop:
       "{{ key_list | selectattr('local_ssh_key', 'defined') |
       selectattr('ssh_key', '==', True) | list }}"
+  loop_control:
+    loop_var: ssh_key
+    label: '{{ ssh_key.name }}'
